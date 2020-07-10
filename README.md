@@ -2,19 +2,30 @@
 
 ![Python application](https://github.com/DataStax-Toolkit/sperf/workflows/Python%20application/badge.svg)
 
-`sperf` is a command line tool that can analyze clusters and hardware performance to help diagnose performance problems with [DataStax Enterprise](https://www.datastax.com/products/datastax-enterprise) and [Apache Cassandra®](http://cassandra.apache.org/). Originally an internal only project is has been opened sourced under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.html) and a new public repository was created.
+`sperf` is a command line tool that can analyze clusters and hardware performance to help
+diagnose performance problems with
+[DataStax Enterprise](https://www.datastax.com/products/datastax-enterprise) and
+[Apache Cassandra®](http://cassandra.apache.org/). Originally an internal only project
+is has been opened sourced under the
+[Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.html)
+and a new public repository was created.
 
 ### Contributors to closed source sperf
 
-* Brandon Williams (driftx) - rewrite from Go to Python, primary author of gc, statuslogger, sysbottle, jarcheck, bgrep, ttop, and slowquery
-* Ryan Svihla (rssvihla) - original project author, solr tooling, diag and default command
+* Brandon Williams (driftx) - rewrite from Go to Python, primary author of
+gc, statuslogger, sysbottle, jarcheck, bgrep, ttop, and slowquery
+* Ryan Svihla (rssvihla) - original project author, solr tooling,
+diag and default command
 * Nate Sanders (Nate75Sanders) - 1 commit but it was a good bug fix
 
 ## Getting started
 
-1. Download binary install for your platform in the [releases](https://github.com/DataStax-Toolkit/sperf/releases) section. Because we use [Pyinstaller](https://www.pyinstaller.org) no Python environment is required (or utilized).
-2. Generate a diagnostic tarball from your cluster. If you're using DSE we suggest using [OpsCenter](https://docs.datastax.com/en/opscenter/6.7/opsc/online_help/opscCollectingDiagnosticData_t.html) and if on Apache Cassandra™ contact [Luna support](https://www.datastax.com/services/datastax-luna) for the tooling needed (or use [diagnostic collection scripts](https://github.com/DataStax-Toolkit/diagnostic-collection)).
-3. Navigate to tarball directory (one should see a 'nodes' folder) and run `sperf`. The output will give you a simple health check and provide some recommendations for next steps.
+1. Download binary install for your platform in the
+[releases](https://github.com/DataStax-Toolkit/sperf/releases) section.
+2. Generate a diagnostic tarball from your cluster via the
+[diagnostic collection scripts](https://github.com/DataStax-Toolkit/diagnostic-collection)).
+3. Navigate to tarball directory (one should see a 'nodes' folder) and run `sperf`.
+The output will give you a simple health check and provide some recommendations for next steps.
 
 ### For high CPU issues
 
@@ -51,37 +62,43 @@
 * sperf [core slowquery](docs/commands/core/slowquery.md) - Generates a report of slow queries in debug log. DSE 6.0-6.7
 * sperf [core statuslogger](docs/commands/core/statuslogger.md) - Provides analysis of StatusLogger log lines. DSE 5.0-6.7 Cassandra 2.1-3.11.x
 * sperf [search filtercache](docs/commands/search/filtercache.md) - Generates a report of filter cache evictions. DSE Search 5.1-6.7
-* sperf [search queryscore](docs/commands/search/queryscore.md) - Tries to summarize queries in the debug log based on score that attempts to estimate the relative potential cost of queries. DSE Search 5.1-6.7
+* sperf [search queryscore](docs/commands/search/queryscore.md) - Tries to summarize queries in the debug log based on score
+that attempts to estimate the relative potential cost of queries. DSE Search 5.1-6.7
 * sperf [sysbottle](docs/commands/sysbottle.md) - sysbottle provides analysis of an iostat file. Supports iostat files generated via `iostat -x -c -d -t`
 * sperf [ttop](docs/commands/ttop.md) - Analyze ttop files
 
 ### Note
 
-To see each command's available flags, documentation and examples just add the -h flag to each command. For more information see the [generated docs](docs/commands/)
+To see each command's available flags, documentation and examples just add the -h flag to each command.
+For more information see the [generated docs](docs/commands/)
 
 ## FAQ
 
-* Do I need to install Python? Nope! Just download the binary for your platform.
 * Which tool do I use first? `sperf` run from a diag directory is a good starting point.
 * What's the command I use for iostat and `sperf sysbottle`? `iostat -x -d -c -t 1 600`
-* What about Python 3.8 support? Python 3.8 works fine with sperf, but we cannot yet generate binaries for 3.8 until this issue is closed: https://github.com/pyinstaller/pyinstaller/issues/4311
+* Where did Python go? As time went on it was harder to support pyinstaller and make releases
+(mostly issues with what options a particular python version was installed with) as well as version conflicts with new versions
+of Python and pyinstaller support. Likewise I'd has fairly frequent complaints about the slowdown that came with the Python version.
+However, the last version of Python is in the 0.6.x series and will be supported for many years to come. We will accept contributions to this version
+and continue to update it, but will not make any great changes to the internals or to the interface.
+* Are you supporting chocolately? Not yet.
 
 # Development
 
 ## Contributing
 
-1. Make sure you have Python 3.5.x or greater. If not then look at https://github.com/pyenv/pyenv
+1. Make sure you have Go 1.14 or greater.
 2. run `git clone git@github.com:DataStax-Toolkit/sperf.git`
 3. run `cd sperf`
-4. run `python3 -m venv ./venv`
-5. run `source ./venv/bin/activate`
-6. run `pip install -r requirements.txt` to install dependencies
-7. run `./scripts/sperf -h` and you should see the help for sperf
+4. run `go build -o bin/sperf ./cmd/...` or `make` if you have make installed
+5. run `./bin/sperf -h` and you should see the help for sperf
 
 ## Testing and validation
 
-1. run `scripts/test`
-2. run `scripts/lint`
+1. run `go test -v ./...`
+2. Install the  linter if you don't already have it via
+`curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0`
+3. run `golangci-lint run`
 
 # License
 

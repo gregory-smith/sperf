@@ -1,3 +1,16 @@
+sperf 0.7.0-beta
+----------------
+* moving back to go for deployment and speedup gains. Putting 0.6.x in LTS and will continue to develop and support
+enchancements to the tooling for a very long time. We may not support massive changes to Python and we may drop
+support for the built binaries as they are problematic to generate. We will take new PRs to the Python code base only
+and will allow the tooling to drift a bit, but will make every effort to keep the tooling in sync as much as possible.
+
+sperf 0.6.1
+-----------
+* more graceful handling of empty content
+* python 3.5-3.8 support for people who want to run from source
+* mac binary dropped support for OSX 10.12
+
 sperf 0.6.0
 -----------
 * initial open source release
