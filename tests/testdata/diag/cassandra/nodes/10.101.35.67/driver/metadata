@@ -1,4 +1,0 @@
-
-Cluster: COSS_tarball
-Partitioner: Murmur3Partitioner
-

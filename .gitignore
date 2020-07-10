@@ -1,33 +1,22 @@
 bin/
 *.swp
 *~
-vendor/
-coverage/
-*.code-workspace
 .vscode/
 #*# 
 .DS_Store
-./venv
-venv
-*.pyc
-.coverage
-cov.html
-.pytest_cache
-*.spec
 
-# os markers
-*.plist
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
-#pyenv
-.python-version
+# Test binary, built with `go test -c`
+*.test
 
-#tox
-.tox
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
 
-#setup
-.eggs
-*.egg-info
-build/
-__pycache__
-dist
-sperf.spec
+# Dependency directories (remove the comment below to include it)
+# vendor/

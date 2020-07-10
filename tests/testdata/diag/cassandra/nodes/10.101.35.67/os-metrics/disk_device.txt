@@ -1,2 +1,0 @@
-data: ,/dev/vda2
-commitlog: /dev/vda2

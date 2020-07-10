@@ -1,4 +1,0 @@
-{
-  "dse" : "/etc/dse/dse.yaml",
-  "cassandra" : "/etc/dse/cassandra/cassandra.yaml"
-}

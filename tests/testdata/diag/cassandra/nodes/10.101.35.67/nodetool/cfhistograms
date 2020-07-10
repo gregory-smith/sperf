@@ -1,2 +1,0 @@
-nodetool: cfhistograms requires ks and cf args
-See 'nodetool help' or 'nodetool help <command>'.
