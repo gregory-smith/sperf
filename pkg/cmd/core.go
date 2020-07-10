@@ -19,7 +19,6 @@ import (
 //	"os"
 )
 
-//ExecSearch is the entry point for the search subcommand
-func ExecSearch(args []string) {
-
+//ExecCore is the entry point for the core subcommand
+func ExecCore(args []string) {
 }

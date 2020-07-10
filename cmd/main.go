@@ -17,6 +17,8 @@ import (
 	//	"flag"
 	"fmt"
 	"os"
+
+	"github.com/DataStax-Toolkit/sperf/pkg/cmd"
 )
 
 //help outputs the standard help
@@ -61,13 +63,17 @@ Commands:
 
 //main is the entry point to the application
 func main() {
-	//subCmdArgs := os.Args[2:]
+	subCmdArgs := os.Args[2:]
 	subCmd := os.Args[1]
 	switch subCmd {
 	case "core":
+		cmd.ExecCore(subCmdArgs)
 	case "search":
+		cmd.ExecSearch(subCmdArgs)
 	case "sysbottle":
+		cmd.ExecSysBottle(subCmdArgs)
 	case "ttop":
+		cmd.ExecTTop(subCmdArgs)
 	default:
 		fmt.Printf("Unknown cmd %s\n", subCmd)
 		fmt.Println(help())

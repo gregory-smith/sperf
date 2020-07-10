@@ -19,7 +19,6 @@ import (
 //	"os"
 )
 
-//ExecSearch is the entry point for the search subcommand
-func ExecSearch(args []string) {
-
+//ExecTTop is the entry point for the ttop subcommand
+func ExecTTop(args []string) {
 }

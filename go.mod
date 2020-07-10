@@ -1,3 +1,3 @@
-module github.com/DataStax-Tools/sperf
+module github.com/DataStax-Toolkit/sperf
 
 go 1.14

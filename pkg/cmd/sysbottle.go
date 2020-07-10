@@ -19,7 +19,7 @@ import (
 //	"os"
 )
 
-//ExecSearch is the entry point for the search subcommand
-func ExecSearch(args []string) {
+//ExecSysBottle is the entry point for the sysbottle subcommand
+func ExecSysBottle(args []string) {
 
 }
