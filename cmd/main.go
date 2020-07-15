@@ -70,6 +70,7 @@ Commands:
 func main() {
 	subCmdArgs := os.Args[2:]
 	subCmd := os.Args[1]
+	fmt.Printf("sperf version: %s commit: %s built on: %s by: %s\n", version, commit, date, builtBy)
 	switch subCmd {
 	case "core":
 		cmd.ExecCore(subCmdArgs)

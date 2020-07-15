@@ -14,9 +14,16 @@
 package cmd
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
+	"time"
+	"unicode"
+
+	"github.com/DataStax-Toolkit/sperf/pkg/env"
 )
 
 //ExecSysBottle is the entry point for the sysbottle subcommand
@@ -51,78 +58,148 @@ func RunSysBottle(cpu int, diskQueue float64, disks string, ioWait int, threshol
 	return report, nil
 }
 
-/**
-func parseFiles(){
-    # states
-    cpu := 'cpu'
-    date := 'date'
-    device := 'device'
+type CPUMeasurement struct {
+	Cols []string
+	Stat []float64
+}
 
-    #us, eu date formats, and one seen in sper66
-    datefmts := ['%m/%d/%Y %I:%M:%S %p', '%d/%m/%y %H:%M:%S', '%m/%d/%y %H:%M:%S']
+type DeviceMeasurement struct {
+	Cols []string
+	Stat map[string][]float64
+}
 
-        .state = None
-        self.__mkiostat()
+type IOStatRow struct {
+	Date   time.Time
+	CPU    CPUMeasurement
+	Device DeviceMeasurement
+}
 
-    def __mkiostat(self):
-        self.iostat = {
-            'cpu': {'cols': [], 'stat': []},
-            'device': {'cols': [], 'stat': {}},
-            'date': None
-            }
+//IOStatParser reads an iostat file and pulls out the numbers we care about
+type IOStatParser struct {
+	state  string
+	iostat IOStatRow
+}
 
-    def _parse(self, line):
-        if line == '\n': # empty lines are the reset switch
-            if self.state == self.DEVICE:
-                yield self.iostat
-                self.__mkiostat()
-            self.state = None
-            return
+func (s *IOStatParser) mkiostat() {
+	s.iostat = IOStatRow{
+		CPU: CPUMeasurement{},
+		Device: DeviceMeasurement{
+			Stat: make(map[string][]float64),
+		},
+	}
+}
 
-        line = line.strip()
+// states
+var CPU = "cpu"
+var DATE = "date"
+var DEVICE = "device"
 
-        if self.state == self.CPU:
-            self._parse_cpu(line)
-        elif self.state == self.DEVICE:
-            self._parse_device(line)
-        elif line[0].isdigit():
-            self._parse_date(line)
-        else:
-            if line.startswith('avg-cpu'):
-                self.state = self.CPU
-                self.iostat['cpu']['cols'] = self._parse_columns(line)
-            elif line.startswith('Device'):
-                self.state = self.DEVICE
-                self.iostat['device']['cols'] = self._parse_columns(line)
+//results := make(chan IOStatRow)
+//us, eu date formats, and one seen in sper66
 
-    def _parse_columns(self, line):
-        return line.split()[1:]
+var datefmts []string = []string{"%m/%d/%Y %I:%M:%S %p", "%d/%m/%y %H:%M:%S", "%m/%d/%y %H:%M:%S"}
 
-    def _parse_cpu(self, line):
-        self.iostat['cpu']['stat'] = [float(i.replace(',', '.')) for i in line.split()]
+func (s *IOStatParser) ParseRow(results chan IOStatRow, line string) error {
+	if line == "\n" { // empty lines are the reset switch
+		if s.state == DEVICE {
+			results <- s.iostat
+			s.mkiostat()
+		}
+		s.state = ""
+		return nil
+	}
 
-    def _parse_device(self, line):
-        parts = line.split()
-        self.iostat['device']['stat'][parts[0]] = [float(i.replace(',', '.')) for i in parts[1:]]
+	line = strings.TrimSpace(line)
 
-    def _parse_date(self, line):
-        date = None
-        for datefmt in self.datefmts:
-            try:
-                date = datetime.strptime(line, datefmt)
-            except ValueError as e:
-                if env.DEBUG:
-                    print(e)
-        if not date:
-            raise ValueError("tried parsing in the following formats " + \
-                    "'%s' but %s does not match" % (self.datefmts, line))
-        self.iostat['date'] = date
+	if s.state == CPU {
+		if err := s.parseCPU(line); err != nil {
+			return fmt.Errorf("unable to parse cpu with error %s", err)
+		}
+	} else if s.state == DEVICE {
+		if err := s.parseDevice(line); err != nil {
+			return fmt.Errorf("unable to parse device with error %s", err)
+		}
+	} else if unicode.IsDigit(rune(line[0])) {
+		if err := s.parseDate(line); err != nil {
+			return fmt.Errorf("unable to parse date with error %s", err)
+		}
+	} else {
+		if strings.HasPrefix(line, "avg-cpu") {
+			s.state = CPU
+			s.iostat.CPU.Cols = s.parseColumns(line)
+		} else if strings.HasPrefix(line, "Device") {
+			s.state = DEVICE
+			s.iostat.Device.Cols = s.parseColumns(line)
+		}
+	}
+	return nil
+}
 
-    def parse(self, infile):
-        "parse an iostat file"
-        with open(infile, 'r') as f:
-            for line in f:
-                for stat in self._parse(line):
-                    yield stat
+func (s *IOStatParser) parseColumns(line string) []string {
+	return strings.Split(line, " ")
+}
 
-*/
+func (s *IOStatParser) parseCPU(line string) error {
+	var ioStats []float64
+	for _, rawStat := range strings.Split(line, " ") {
+		stat := strings.Replace(rawStat, ",", ".", 1)
+		parsedStat, err := strconv.ParseFloat(stat, 64)
+		if err != nil {
+			return fmt.Errorf("unable to parse cpu line '%s' for number '%s' with error '%s'", line, stat, err)
+		}
+		ioStats = append(ioStats, parsedStat)
+	}
+	s.iostat.CPU.Stat = ioStats
+	return nil
+}
+
+func (s *IOStatParser) parseDevice(line string) error {
+	parts := strings.Split(line, " ")
+	var deviceStat []float64
+	for _, rawStat := range parts[1:] {
+		stat := strings.Replace(rawStat, ",", ".", 1)
+		parsedStat, err := strconv.ParseFloat(stat, 64)
+		if err != nil {
+			return fmt.Errorf("unable to parse device line '%s' for number '%s' with error '%s'", line, stat, err)
+		}
+		deviceStat = append(deviceStat, parsedStat)
+	}
+	deviceName := parts[0]
+	s.iostat.Device.Stat[deviceName] = deviceStat
+	return nil
+}
+
+func (s *IOStatParser) parseDate(line string) error {
+	var date time.Time
+	for _, datefmt := range datefmts {
+		if rawDate, err := time.Parse(line, datefmt); err != nil {
+			if env.Debug {
+				fmt.Printf("unable to parse format %s with line %s", datefmt, line)
+			}
+		} else {
+			date = rawDate
+		}
+	}
+	if date.IsZero() {
+		return fmt.Errorf("tried parsing in the following formats '%s' but %s does not match", datefmts, line)
+	}
+	s.iostat.Date = date
+	return nil
+}
+
+func (s *IOStatParser) Parse(infile string) (chan IOStatRow, error) {
+	//parse an iostat file
+	results := make(chan IOStatRow)
+	f, err := os.Open(infile)
+	if err != nil {
+		return results, fmt.Errorf("unable to open file %s with error %s", infile, err)
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := s.ParseRow(results, scanner.Text()); err != nil {
+			return results, fmt.Errorf("unable to parse row with error %s", err)
+		}
+	}
+	return results, nil
+}
