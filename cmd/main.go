@@ -21,6 +21,11 @@ import (
 	"github.com/DataStax-Toolkit/sperf/pkg/cmd"
 )
 
+var version string = "dev"
+var commit string = "none"
+var date string = "0000-00-00"
+var builtBy string = "manual"
+
 //help outputs the standard help
 func help() string {
 	//TODO dynamically generate from flags
