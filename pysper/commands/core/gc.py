@@ -31,6 +31,12 @@ def add_flags(subparsers, run_func):
                            help="start date/time to begin parsing")
     gc_parser.add_argument('-et', '--end', type=str, nargs='?', const=None, default=None,
                            help="end date/time to stop parsing")
+    gc_parser.add_argument('-l', '--debug_log_prefix',
+            default='debug.log',
+            help='if debug.log in the diag tarball has an oddball name, ' + \
+                    'can still look based on this prefix ' + \
+                    '(default "debug.log")')
+ 
     flags.add_diagdir(gc_parser)
     flags.add_files(gc_parser)
     gc_parser.set_defaults(func=run_func)
